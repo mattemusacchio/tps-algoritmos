@@ -40,22 +40,22 @@ unsigned long hash(const char *key, size_t capacity) {
 
 
 void rehash(dictionary_t *dictionary) {
-  size_t new_capacity = dictionary->capacity * 2;
-  struct entry_node **new_buckets = calloc(new_capacity, sizeof(struct entry_node *));
-  if (!new_buckets) return;
-  for (size_t i = 0; i < dictionary->capacity; i++) {
-    struct entry_node *node = dictionary->buckets[i];
-    while (node) {
-      struct entry_node *next = node->next;
-      unsigned long index = hash(node->key, new_capacity);
-      node->next = new_buckets[index];
-      new_buckets[index] = node;
-      node = next;
+    size_t new_capacity = dictionary->capacity * 2;
+    struct entry_node **new_buckets = calloc(new_capacity, sizeof(struct entry_node *));
+    if (!new_buckets) return;
+    for (size_t i = 0; i < dictionary->capacity; i++) {
+        struct entry_node *node = dictionary->buckets[i];
+        while (node) {
+        struct entry_node *next = node->next;
+        unsigned long index = hash(node->key, new_capacity);
+        node->next = new_buckets[index];
+        new_buckets[index] = node;
+        node = next;
+        }
     }
-  }
-  free(dictionary->buckets);
-  dictionary->buckets = new_buckets;
-  dictionary->capacity = new_capacity;
+    free(dictionary->buckets);
+    dictionary->buckets = new_buckets;
+    dictionary->capacity = new_capacity;
 };
 
 dictionary_t *dictionary_create(destroy_f destroy) {
