@@ -73,17 +73,6 @@ dictionary_t *dictionary_create(destroy_f destroy) {
 };
 
 bool dictionary_put(dictionary_t *dictionary, const char *key, void *value) {
-/* Inserta un par clave-valor en el diccionario. O(1).
- * Pre-condiciones:
- * - El diccionario existe
- * - La clave tiene largo mayor a cero
- * - El valor puede ser destruido con la función con la que se inicializó el diccionario.
- * Post-condiciones:
- * - Retorna true si se ha podido guardar con éxito el par clave/valor
- * - Retorna false de otro modo.
- * - Si la clave ya estaba presente, se elimina el valor previo
-*/
-
     if ((float) dictionary->size / (float) dictionary->capacity >= UMBRAL) {
         rehash(dictionary);
     }
@@ -117,14 +106,6 @@ bool dictionary_put(dictionary_t *dictionary, const char *key, void *value) {
 };
 
 void *dictionary_get(dictionary_t *dictionary, const char *key, bool *err) {
-  /* Obtiene un valor del diccionario desde su clave. O(1).
- * Pre-condiciones
- * - El diccionario existe
- * - La clave tiene largo mayor a cero
- * Post-condiciones:
- * - Si la clave está presente, retorna el valor asociado y err debe ser false
- * - De otro modo, debe retornar NULL y err debe ser true
- */
   unsigned long index = hash(key, dictionary->capacity);
   struct entry_node *node = dictionary->buckets[index];
   while (node) {
@@ -139,13 +120,6 @@ void *dictionary_get(dictionary_t *dictionary, const char *key, bool *err) {
 };
 
 bool dictionary_delete(dictionary_t *dictionary, const char *key) {
-  /* Elimina una clave del diccionario. O(1).
- * Pre-condiciones
- * - El diccionario existe
- * - La clave tiene largo mayor a cero
- * Retorna true si la clave estaba presente y se pudo eliminar, o false
- * de otro modo.
- */
   unsigned long index = hash(key, dictionary->capacity);
   struct entry_node *node = dictionary->buckets[index];
   struct entry_node *prev = NULL;
@@ -167,14 +141,6 @@ bool dictionary_delete(dictionary_t *dictionary, const char *key) {
 };
 
 void *dictionary_pop(dictionary_t *dictionary, const char *key, bool *err) {
-  /* Elimina una clave y retorna su valor asociado. O(1).
- * Pre-condiciones:
- * - El diccionario existe
- * - La clave tiene largo mayor a cero
- * Post-condiciones:
- * - Si la calve está presente, retorna el valor asocaido y err debe ser false
- * - De otro modo, debe retornar NULL y err debe ser true
- */
   unsigned long index = hash(key, dictionary->capacity);
   struct entry_node *node = dictionary->buckets[index];
   struct entry_node *prev = NULL;
@@ -200,14 +166,6 @@ void *dictionary_pop(dictionary_t *dictionary, const char *key, bool *err) {
 };
 
 bool dictionary_contains(dictionary_t *dictionary, const char *key) {
-  /* Indica si hay un valor asociado a la clave indicada. O(1).
- * Pre-condiciones:
- * - El diccionario existe
- * - La clave tiene largo mayor a cero
- * Post-condiciones:
- * - Retorna true si la clave está presente en el diccionario
- * - Retorna false de otro modo
- */
     unsigned long index = hash(key, dictionary->capacity);
     struct entry_node *current = dictionary->buckets[index];
     
@@ -220,17 +178,9 @@ bool dictionary_contains(dictionary_t *dictionary, const char *key) {
 };
 
 size_t dictionary_size(dictionary_t *dictionary) { 
-  /* Indica la cantidad de elementos guardados en el diccionario. O(1).
- * Pre-condiciones:
- * - El diccionario existe
- */
 return dictionary->size; };
 
 void dictionary_destroy(dictionary_t *dictionary){
-  /* Destruye el diccionario y los valores asociados a todas las claves presentes.
- * Pre-condiciones:
- * - El diccionario existe
- */
   if (!dictionary) return;
   for (size_t i = 0; i < dictionary->capacity; i++) {
     struct entry_node *node = dictionary->buckets[i];
