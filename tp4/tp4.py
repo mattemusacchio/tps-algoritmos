@@ -1,6 +1,44 @@
 from graph import Graph
 
+class DisjointSet:
+    def __init__(self):
+        self.parent = {}
+        self.rank = {}
+
+    def find(self, item):
+        if self.parent[item] != item:
+            self.parent[item] = self.find(self.parent[item])
+        return self.parent[item]
+
+    def union(self, set1, set2):
+        root1 = self.find(set1)
+        root2 = self.find(set2)
+
+        if root1 != root2:
+            if self.rank[root1] > self.rank[root2]:
+                self.parent[root2] = root1
+            elif self.rank[root1] < self.rank[root2]:
+                self.parent[root1] = root2
+            else:
+                self.parent[root2] = root1
+                self.rank[root1] += 1
+
+    def add(self, item):
+        if item not in self.parent:
+            self.parent[item] = item
+            self.rank[item] = 0
+
+    def get_components(self):
+        components = {}
+        for item in self.parent:
+            root = self.find(item)
+            if root not in components:
+                components[root] = []
+            components[root].append(item)
+        return components
+
 graph = Graph()
+disjoint = DisjointSet()
 
 with open('web-Google.txt', 'r') as file:
     for l in file:
@@ -13,7 +51,9 @@ with open('web-Google.txt', 'r') as file:
         for v in edge:
             if not graph.vertex_exists(v):
                 graph.add_vertex(str(v))
+                disjoint.add(v)
         graph.add_edge(str(edge[0]), str(edge[1]))
+        disjoint.union(edge[0], edge[1])
 
 """
 Web links
@@ -48,16 +88,8 @@ puntos)
 3) Utilizando el punto 2, ¿cuál es el vértice con más betweenness centrality? (+2
 puntos)
 """
-import networkx as nx
-G = nx.DiGraph()
-for vertex in graph._graph:
-    G.add_node(vertex)
-for vertex in graph._graph:
-    for neighbor in graph.get_neighbors(vertex):
-        G.add_edge(vertex, neighbor)
-pagerank_nx = nx.pagerank(G)
-print(pagerank_nx)
 
+# class disjoint
 
 # graph.graficar()
 
@@ -73,35 +105,15 @@ print(pagerank_nx)
 # Diameter (longest shortest path)	21
 # 90-percentile effective diameter	8.1
 
+
 # 1) ¿Cuál es el tamaño de la componente conexa más grande? ¿Cuántas componentes conexas hay? 
+# hacerlo usando disjoint set
+# disjoint = Disjoint()  Disjoint.__init__() missing 1 required positional argument: 'n'
+components = disjoint.get_components()
 
-def dfs(grafo, start_vertex, visited, component):
-    stack = [start_vertex]
-    while stack:
-        vertex = stack.pop()
-        if not visited[vertex]:
-            visited[vertex] = True
-            component.append(vertex)
-            for neighbor in grafo.get_neighbors(vertex):
-                if not visited[neighbor]:
-                    stack.append(neighbor)
-
-def connected_components(grafo):
-    visited = {vertex: False for vertex in grafo._graph}
-    num_components = 0
-    max_component_size = 0
-    for vertex in grafo._graph:
-        if not visited[vertex]:
-            component = []
-            dfs(grafo, vertex, visited, component)
-            num_components += 1
-            max_component_size = max(max_component_size, len(component))
-    return max_component_size, num_components
-
-max_component_size, num_components = connected_components(graph)
-print("Tamaño de la componente conexa más grande:", max_component_size)
-print("Número de componentes conexas:", num_components)
-print("El orden del algoritmo es O(V + E). = O(875713 + 5105039) = O(5980752)")
+max_component = max(components.values(), key=len)
+print("Tamaño de la componente conexa más grande:", len(max_component))
+print("Número de componentes conexas:", len(components))
 
 # 2) Calcular el camino mínimo de todos con todos. ¿En cuanto tiempo lo puede hacer? ¿Qué orden tiene el algoritmo? En caso de no alcanzarle el tiempo, estime cuanto tiempo le llevaría.
 
@@ -136,7 +148,7 @@ def count_directed_triangles(graph):
                 if graph.edge_exists(second_neighbor, vertex):
                     triangle_count += 1
 
-    return triangle_count
+    return triangle_count//3
 
 triangles = count_directed_triangles(graph)
 print("Cantidad de triángulos:", triangles)

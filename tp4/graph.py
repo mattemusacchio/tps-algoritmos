@@ -87,3 +87,19 @@ class Graph:
         :return: boolean
         """
         return vertex1 in self._graph and vertex2 in self._graph[vertex1]['neighbors']
+    def get_edges_count(self) -> int:
+        """
+        Gets the number of edges
+        :return: the number of edges
+        """
+        count = 0
+        for vertex in self._graph:
+            count += len(self._graph[vertex]['neighbors'])
+        return count
+    
+    def get_vertices(self) -> List[str]:
+        """
+        Gets the list of vertices
+        :return: the list of vertices
+        """
+        return list(self._graph.keys())
