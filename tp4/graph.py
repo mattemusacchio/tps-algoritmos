@@ -1,5 +1,5 @@
-from typing import Optional, Any, List
-
+from typing import Optional, Any, List, Dict, Tuple
+from collections import deque
 
 class Graph:
     """
@@ -87,6 +87,7 @@ class Graph:
         :return: boolean
         """
         return vertex1 in self._graph and vertex2 in self._graph[vertex1]['neighbors']
+    
     def get_edges_count(self) -> int:
         """
         Gets the number of edges
@@ -103,3 +104,37 @@ class Graph:
         :return: the list of vertices
         """
         return list(self._graph.keys())
+    
+    def shortest_paths(self, start: str, end: str) -> List[str]:
+        """
+        Gets the longest path among the five shortest distinct paths between two vertices.
+        :param start: the start vertex
+        :param end: the end vertex
+        :return: the longest of the five shortest distinct paths as a list of vertices
+        """
+        if start == end:
+            return [start]
+
+        queue = deque([(start, [start])])  # Queue of tuples (current_vertex, path_to_vertex)
+        visited = {start: 0}  # Tracks the minimum distance of visiting each node
+        paths = []  # Stores the found paths
+
+        while queue and len(paths) < 10:
+            current_vertex, path = queue.popleft()
+            current_distance = len(path)
+
+            for neighbor in self.get_neighbors(current_vertex):
+                if neighbor == end:
+                    paths.append(path + [end])
+                    if len(paths) >= 10:
+                        break
+                if neighbor not in visited or visited[neighbor] > current_distance:
+                    visited[neighbor] = current_distance
+                    if neighbor not in path:  # Detect cycles
+                        queue.append((neighbor, path + [neighbor]))
+
+        if len(paths) < 10:
+            print("Found fewer than 10 distinct paths")
+
+        # Return the shortest path among the found shortest paths
+        return min(paths, key=len) if paths else []

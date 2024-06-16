@@ -116,17 +116,25 @@ print("Tamaño de la componente conexa más grande:", len(max_component))
 print("Número de componentes conexas:", len(components))
 
 # 2) Calcular el camino mínimo de todos con todos. ¿En cuanto tiempo lo puede hacer? ¿Qué orden tiene el algoritmo? En caso de no alcanzarle el tiempo, estime cuanto tiempo le llevaría.
+# 4) Utilice el punto 2 para calcular el diámetro del grafo.
+# como el grafo es muy grande, achicar la muestra y hacer varias pruebas, para de esa forma aproximar la solucion sin tener que calcularlo entero
 
-def floyd_warshall(grafo):
-    dist = {vertex: {vertex: 0 for vertex in grafo._graph} for vertex in grafo._graph}
-    for vertex in grafo._graph:
-        for neighbor in grafo.get_neighbors(vertex):
-            dist[vertex][neighbor] = grafo.get_edge_data(vertex, neighbor)
-    for k in grafo._graph:
-        for i in grafo._graph:
-            for j in grafo._graph:
-                dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
-    return dist
+import random
+def diametro_aproximado(grafo):
+    vertices = grafo.get_vertices()
+    n = len(vertices)
+    m = 1
+    for i in range(m):
+        v1 = vertices[random.randint(0,n-1)]
+        v2 = vertices[random.randint(0,n-1)]
+        if v1 != v2:
+            print(grafo.shortest_paths(v1,v2))
+
+
+diametro = diametro_aproximado(graph)
+print("Diametro:", diametro)
+
+
 
 # floyd_warshall(graph)
 
@@ -150,21 +158,55 @@ def count_directed_triangles(graph):
 
     return triangle_count//3
 
+# 1) Programe una función genérica que extendiendo la definición del triángulo calcule la
+# cantidad de polígonos de K lados. Haga un gráfico para mostrar la cantidad de
+# polígonos por cantidad de lados, estimando aquellos que no pueda calcular. (+2
+# puntos)
+
+def count_directed_polygons(graph, k):
+    # idea:
+    # nodos = selecciono al azar
+    # for v in nodos:
+    # dfs(nodo,nodo,0,{})
+    # return contador
+    # def dfs(origen, n, longitud):
+    #     if longitud == k and n == origen:
+    #         contador += 1
+    #         return
+    #     if longitud > k:
+    #         return
+    #     for vecino in grafo.get_neighbors(n):
+    #         if vecino not in visitados:
+    #             visitados.add(vecino)
+    #             dfs(origen, vecino, longitud+1)
+    #             visitados.remove(vecino)
+    # hacerlo
+    visitados = set()
+    contador = 0
+    for vertex in graph._graph:
+        visitados.add(vertex)
+        dfs(vertex, vertex, k, 0, visitados,contador)
+        visitados.remove(vertex)
+    return contador
+
+def dfs(origen,n , k, longitud, visitados,contador):
+    if longitud == k and n == origen:
+        contador += 1
+        return
+    if longitud > k:
+        return
+    for vecino in graph.get_neighbors(n):
+        if vecino not in visitados:
+            visitados.add(vecino)
+            dfs(origen, vecino, k, longitud+1, visitados,contador)
+            visitados.remove(vecino)
+
+print(count_directed_polygons(graph, 3))
+
+
+
+
 triangles = count_directed_triangles(graph)
 print("Cantidad de triángulos:", triangles)
 print(13391903 == triangles)
 
-# 4) Utilice el punto 2 para calcular el diámetro del grafo.
-
-def diameter_calc(grafo):
-    dist = floyd_warshall(grafo)
-    diameter = 0
-    for vertex in grafo._graph:
-        for neighbor in grafo.get_neighbors(vertex):
-            diameter = max(diameter, dist[vertex][neighbor])
-    return diameter
-
-# diameter = diameter(graph)
-diameter = 21
-print("Diámetro del grafo:", diameter)
-print(21 == diameter)
