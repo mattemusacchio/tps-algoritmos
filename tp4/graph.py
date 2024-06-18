@@ -1,5 +1,6 @@
 from typing import Optional, Any, List, Dict, Tuple
 from collections import deque
+import random
 
 class Graph:
     """
@@ -105,12 +106,12 @@ class Graph:
         """
         return list(self._graph.keys())
     
-    def shortest_paths(self, start: str, end: str) -> List[str]:
+    def shortest_paths(self, start: str, end: str,n) -> List[str]:
         """
-        Gets the longest path among the five shortest distinct paths between two vertices.
+        Gets the shortest path among the five distinct paths between two vertices.
         :param start: the start vertex
         :param end: the end vertex
-        :return: the longest of the five shortest distinct paths as a list of vertices
+        :return: the shortest of the five distinct paths as a list of vertices
         """
         if start == end:
             return [start]
@@ -119,22 +120,53 @@ class Graph:
         visited = {start: 0}  # Tracks the minimum distance of visiting each node
         paths = []  # Stores the found paths
 
-        while queue and len(paths) < 10:
+        while queue and len(paths) < n:
             current_vertex, path = queue.popleft()
             current_distance = len(path)
 
             for neighbor in self.get_neighbors(current_vertex):
                 if neighbor == end:
                     paths.append(path + [end])
-                    if len(paths) >= 10:
+                    if len(paths) >= n:
                         break
                 if neighbor not in visited or visited[neighbor] > current_distance:
                     visited[neighbor] = current_distance
                     if neighbor not in path:  # Detect cycles
                         queue.append((neighbor, path + [neighbor]))
 
-        if len(paths) < 10:
-            print("Found fewer than 10 distinct paths")
+        if len(paths) < n:
+            print("Found fewer than n distinct paths")
 
         # Return the shortest path among the found shortest paths
         return min(paths, key=len) if paths else []
+    
+    def find_longest_cycle_length(self, sample_size: int = None) -> int:
+        longest_cycle_length = 0
+        vertices = list(self.get_vertices())
+
+        if sample_size is not None and sample_size < len(vertices):
+            sample_vertices = random.sample(vertices, sample_size)
+        else:
+            sample_vertices = vertices
+
+        for start_vertex in sample_vertices:
+            visited = set()
+            queue = deque([(start_vertex, 0)]) 
+
+            while queue:
+                current, distance = queue.popleft()
+
+                if current in visited:
+                    longest_cycle_length = max(longest_cycle_length, distance)
+                    continue
+
+                visited.add(current)
+
+                for neighbor in self.get_neighbors(current):
+                    if neighbor not in visited:
+                        queue.append((neighbor, distance + 1))
+
+        if longest_cycle_length == 0:
+            return float('inf')  
+        else:
+            return longest_cycle_length
