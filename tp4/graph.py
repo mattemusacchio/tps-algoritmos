@@ -1,6 +1,9 @@
 from typing import Optional, Any, List, Dict, Tuple
 from collections import deque
 import random
+import numpy as np
+import time
+from tqdm import tqdm
 
 class Graph:
     """
@@ -106,9 +109,76 @@ class Graph:
         """
         return list(self._graph.keys())
     
-    def shortest_paths(self, start: str, end: str,n) -> List[str]:
+    def bfs(self, start: str) -> Dict[str, Tuple[str, int]]:
         """
-        Gets the shortest path among the five distinct paths between two vertices.
+        Breadth-first search
+        :param start: the start vertex
+        :return: the distances from the start vertex to all other vertices
+        """
+        distances = {start: (None, 0)}
+        queue = deque([start])
+
+        while queue:
+            current_vertex = queue.popleft()
+
+            for neighbor in self.get_neighbors(current_vertex):
+                if neighbor not in distances:
+                    distances[neighbor] = (current_vertex, distances[current_vertex][1] + 1)
+                    queue.append(neighbor)
+
+        return distances
+    
+    def tiempo_estimado_bfs(self,n):
+        """
+        estimar tiempo que tarda en encontrar todos los caminos mas cortos
+        """
+        np.random.seed(0)
+        random_samples = np.random.choice(self.get_vertices(), n, replace=False)
+        
+        tiempo_promedio = []
+        for vertex in random_samples:
+            start = time.time()
+            self.bfs(vertex)
+            end = time.time()
+            tiempo_promedio.append(end-start)
+        return np.mean(tiempo_promedio) * len(self.get_vertices())
+    
+    
+    def count_directed_triangles(self):
+        triangle_count = 0
+
+        # Iterar sobre cada vértice
+        for vertex in self._graph:
+            neighbors = self.get_neighbors(vertex)
+            
+            # Iterar sobre cada vecino
+            for neighbor in neighbors:
+                second_neighbors = self.get_neighbors(neighbor)
+                
+                # Verificar si hay una arista de second_neighbor de vuelta al vértice original
+                for second_neighbor in second_neighbors:
+                    if self.edge_exists(second_neighbor, vertex):
+                        triangle_count += 1
+
+        return triangle_count//3
+        
+    def diametroEstimado(self,m) -> List[str]:
+        """
+        estimar el diametro del grafo
+        """
+        vertices = self.get_vertices()
+        n = len(vertices)
+        shortest_lengths = []
+        for _ in range(m):
+            v1,v2 = vertices[random.randint(0,n-1)],vertices[random.randint(0,n-1)]
+            if v1 != v2:
+                shortest_lengths.append(len(self.shortest_path_from_n_random_paths(v1,v2,100)))
+            print(max(shortest_lengths))
+        return max(shortest_lengths)
+    
+    def shortest_path_from_n_random_paths(self, start: str, end: str,n) -> List[str]:
+        """
+        Tomo el camino mas corto entre n caminos que encuentro entre 2 vertices
         :param start: the start vertex
         :param end: the end vertex
         :return: the shortest of the five distinct paths as a list of vertices
@@ -133,40 +203,95 @@ class Graph:
                     visited[neighbor] = current_distance
                     if neighbor not in path:  # Detect cycles
                         queue.append((neighbor, path + [neighbor]))
-
-        if len(paths) < n:
-            print("Found fewer than n distinct paths")
-
         # Return the shortest path among the found shortest paths
         return min(paths, key=len) if paths else []
     
-    def find_longest_cycle_length(self, sample_size: int = None) -> int:
-        longest_cycle_length = 0
-        vertices = list(self.get_vertices())
+    def pageRank(self,m, damping = 0.85, tolerance = 1e-8, max_iter = 100):
+        """
+        implementar PageRank y devolver los primeros m vertices con mayor PageRank
+        """
 
-        if sample_size is not None and sample_size < len(vertices):
-            sample_vertices = random.sample(vertices, sample_size)
-        else:
-            sample_vertices = vertices
+        vertices = self.get_vertices()
+        n = len(vertices)
+        page_rank = {vertex: 1/n for vertex in vertices}
+        out_degree = {vertex: len(self.get_neighbors(vertex)) for vertex in vertices}
+        transpuesto = self.transponerGrafo()
+        transpuesto_vecinos = {vertex: transpuesto.get_neighbors(vertex) for vertex in vertices}
+        
+        for _ in tqdm(range(max_iter)):
+            new_page_rank = {}
+            for vertex in vertices:
+                new_page_rank[vertex] = (1-damping)/n + damping*sum([page_rank[neighbor]/out_degree[neighbor] for neighbor in transpuesto_vecinos[vertex]])
+            if sum([abs(new_page_rank[vertex] - page_rank[vertex]) for vertex in vertices]) < tolerance:
+                break
+            page_rank = new_page_rank
 
-        for start_vertex in sample_vertices:
-            visited = set()
-            queue = deque([(start_vertex, 0)]) 
+        return dict(sorted(page_rank.items(), key=lambda x: x[1], reverse=True)[:m])
 
-            while queue:
-                current, distance = queue.popleft()
+    def transponerGrafo(self):
+        """
+        Transponer el grafo
+        """
+        transposed = Graph()
+        for vertex in self.get_vertices():
+            transposed.add_vertex(vertex)
+        for vertex in self.get_vertices():
+            for neighbor in self.get_neighbors(vertex):
+                transposed.add_edge(neighbor, vertex)
+        return transposed
 
-                if current in visited:
-                    longest_cycle_length = max(longest_cycle_length, distance)
-                    continue
+    def _dfs_buscar_ciclo(self, vertice, visitados, stack_path, longitud_ciclo):
+        stack = [(vertice, [vertice])]
+        while stack:
+            current_node, path = stack.pop()
+            if current_node not in visitados:
+                visitados.add(current_node)
+                stack_path[current_node] = path
+                for neighbor in self.get_neighbors(current_node):
+                    if neighbor not in visitados:
+                        stack.append((neighbor, path + [neighbor]))
+                    elif neighbor in stack_path and neighbor in path:
+                        cycle = path
+                        if len(cycle) - cycle.index(neighbor) == longitud_ciclo:
+                            return cycle[cycle.index(neighbor):]
+            elif current_node in stack_path and current_node in path:
+                if len(path) - path.index(current_node) == longitud_ciclo:
+                    return path[path.index(current_node):]
+                else:
+                    return []
+        return []
 
-                visited.add(current)
+    def buscar_ciclos(self, longitud_ciclo, max_time):
+        start_time = time.time()
+        bar = tqdm(total=max_time, desc=f"Buscando ciclos de longitud {longitud_ciclo}",leave=False)
+        
+        for node in self._graph:
+            if time.time() - start_time > max_time:
+                break
+            visitados = set()
+            path = {}
+            cycle = self._dfs_buscar_ciclo(node, visitados, path, longitud_ciclo)
+            if cycle:
+                bar.close()
+                print(f"Ciclo encontrado. longitud: {longitud_ciclo}")
+                return cycle
+            bar.update(time.time() - start_time - bar.n)
+        
+        bar.close()
+        return []
 
-                for neighbor in self.get_neighbors(current):
-                    if neighbor not in visited:
-                        queue.append((neighbor, distance + 1))
+    def circunferencia(self, max_time=5):
+        vertices = list(self._graph.keys())
+        min, max = 2, len(vertices)
+        circunferencia = 0
 
-        if longest_cycle_length == 0:
-            return float('inf')  
-        else:
-            return longest_cycle_length
+        while min <= max:
+            mitad = (min + max) // 2
+            cycle = self.buscar_ciclos(mitad, max_time)
+            if cycle:
+                circunferencia = mitad
+                min = mitad + 1
+            else:
+                max = mitad - 1
+
+        return circunferencia

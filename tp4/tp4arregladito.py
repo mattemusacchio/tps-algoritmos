@@ -1,4 +1,6 @@
 from graph import Graph
+import random
+from tqdm import tqdm
 
 class DisjointSet:
     def __init__(self):
@@ -37,23 +39,26 @@ class DisjointSet:
             components[root].append(item)
         return components
 
-graph = Graph()
-disjoint = DisjointSet()
+def inicializar_grafos():
+    grafo = Graph()
+    disjoint = DisjointSet()
 
-with open('web-Google.txt', 'r') as file:
-    for l in file:
-        if "# FromNodeId	ToNodeId" in l:
-            break
-    for l in file:
-        if not l:
-            break
-        edge = tuple(int(v.replace("\n", "").replace("\t", "")) for v in l.split("\t"))
-        for v in edge:
-            if not graph.vertex_exists(v):
-                graph.add_vertex(str(v))
-                disjoint.add(v)
-        graph.add_edge(str(edge[0]), str(edge[1]))
-        disjoint.union(edge[0], edge[1])
+    with open('web-Google.txt', 'r') as file:
+        for l in file:
+            if "# FromNodeId	ToNodeId" in l:
+                break
+        for l in tqdm(file, total=5105039, initial=0):
+            if not l:
+                break
+            edge = tuple(int(v.replace("\n", "").replace("\t", "")) for v in l.split("\t"))
+            for v in edge:
+                if not grafo.vertex_exists(v):
+                    grafo.add_vertex(str(v))
+                    disjoint.add(v)
+            grafo.add_edge(str(edge[0]), str(edge[1]))
+            disjoint.union(edge[0], edge[1])
+    return grafo, disjoint
+
 
 """
 Web links
@@ -89,10 +94,6 @@ puntos)
 puntos)
 """
 
-# class disjoint
-
-# graph.graficar()
-
 # Nodes	875713
 # Edges	5105039
 # Nodes in largest WCC	855802 (0.977)
@@ -105,60 +106,45 @@ puntos)
 # Diameter (longest shortest path)	21
 # 90-percentile effective diameter	8.1
 
-
-# 1) ¿Cuál es el tamaño de la componente conexa más grande? ¿Cuántas componentes conexas hay? 
-# hacerlo usando disjoint set
-# disjoint = Disjoint()  Disjoint.__init__() missing 1 required positional argument: 'n'
-
 def punto_1(disjoint):
+    # 1) ¿Cuál es el tamaño de la componente conexa más grande? ¿Cuántas componentes conexas hay? 
+    print("************************** Punto 1 **************************")
     components = disjoint.get_components()
     max_component = max(components.values(), key=len)
     print("Tamaño de la componente conexa más grande:", len(max_component))
     print("Número de componentes conexas:", len(components))
+    
+def punto_2(grafo: Graph):
+    # 2) Calcular el camino mínimo de todos con todos. ¿En cuanto tiempo lo puede hacer? ¿Qué orden tiene el algoritmo? En caso de no alcanzarle el tiempo, estime cuanto tiempo le llevaría.
+    # 4) Utilice el punto 2 para calcular el diámetro del grafo.
+    print("************************** Punto 2 **************************")
+    n = 100
+    tiempo = grafo.tiempo_estimado_bfs(n)
+    print(f"Estimación de tiempo para encontrar todos los caminos más cortos: {estimar_tiempo(tiempo)}")
 
+def punto_3(grafo: Graph):
+    # 3) En un grafo un triángulo es una conexión entre 3 vértices A, B y C donde: A está conectado con B, B está conectado con C, C está conectado con A ¿Cuántos triángulos tiene el grafo?
+    print("************************** Punto 3 **************************")
+    print("Cantidad de triángulos en el grafo:", grafo.count_directed_triangles())
 
-# 2) Calcular el camino mínimo de todos con todos. ¿En cuanto tiempo lo puede hacer? ¿Qué orden tiene el algoritmo? En caso de no alcanzarle el tiempo, estime cuanto tiempo le llevaría.
-# 4) Utilice el punto 2 para calcular el diámetro del grafo.
-# como el grafo es muy grande, achicar la muestra y hacer varias pruebas, para de esa forma aproximar la solucion sin tener que calcularlo entero
+def punto_4(grafo: Graph):
+    # 4) Utilice el punto 2 para calcular el diámetro del grafo.
+    print("************************** Punto 4 **************************")
+    n=100
+    print("Diámetro del grafo:", grafo.diametroEstimado(n))
 
-import random
-def diametro_aproximado(grafo):
-    vertices = grafo.get_vertices()
-    n = len(vertices)
-    m = 1
-    for i in range(m):
-        v1 = vertices[random.randint(0,n-1)]
-        v2 = vertices[random.randint(0,n-1)]
-        if v1 != v2:
-            print(grafo.shortest_paths(v1,v2))
+def punto_5(grafo: Graph):
+    # 5) Google inventó un algoritmo llamado PageRank que le permitía saber qué páginas eran más confiables según que tanto eran referenciadas. PageRank consiste en hacer muchos random walks a lo largo del grafo y contar cuántas veces aparece cada vértice. Los vértices que más aparecen son los de mayor PageRank. Calcule el PageRank de los vértices del grafo.
+    print("************************** Punto 5 **************************")
+    print("PageRank de los vértices del grafo:")
+    n = 10
+    for vertex, rank in grafo.pageRank(n).items():
+        print(f"Vértice {vertex}: {rank}")
 
-
-diametro = diametro_aproximado(graph)
-print("Diametro:", diametro)
-
-
-
-# floyd_warshall(graph)
-
-# 3) En un grafo un triángulo es una conexión entre 3 vértices A, B y C donde: A está conectado con B, B está conectado con C, C está conectado con A ¿Cuántos triángulos tiene el grafo?
-
-def count_directed_triangles(graph):
-    triangle_count = 0
-
-    # Iterar sobre cada vértice
-    for vertex in graph._graph:
-        neighbors = graph.get_neighbors(vertex)
-        
-        # Iterar sobre cada vecino
-        for neighbor in neighbors:
-            second_neighbors = graph.get_neighbors(neighbor)
-            
-            # Verificar si hay una arista de second_neighbor de vuelta al vértice original
-            for second_neighbor in second_neighbors:
-                if graph.edge_exists(second_neighbor, vertex):
-                    triangle_count += 1
-
-    return triangle_count//3
+def punto_6(grafo: Graph):
+    # 6) La circunferencia del grafo es el largo del ciclo más largo. ¿Cuál es la circunferencia del grafo?
+    print("************************** Punto 6 **************************")
+    print("Circunferencia del grafo:", grafo.circunferencia())
 
 # 1) Programe una función genérica que extendiendo la definición del triángulo calcule la
 # cantidad de polígonos de K lados. Haga un gráfico para mostrar la cantidad de
@@ -203,12 +189,23 @@ def dfs(origen,n , k, longitud, visitados,contador):
             dfs(origen, vecino, k, longitud+1, visitados,contador)
             visitados.remove(vecino)
 
-print(count_directed_polygons(graph, 3))
 
+def estimar_tiempo(tiempo):
+    if tiempo < 60:
+        return f"{tiempo:.2f} segundos"
+    elif tiempo < 3600:
+        return f"{tiempo/60:.2f} minutos"
+    else:
+        return f"{tiempo/3600:.2f} horas"
 
+if __name__ == "__main__":
+    grafo , disjoint = inicializar_grafos()
 
-
-triangles = count_directed_triangles(graph)
-print("Cantidad de triángulos:", triangles)
-print(13391903 == triangles)
+    # punto_1(disjoint)
+    # punto_2(grafo)
+    # punto_3(grafo)
+    # punto_4(grafo)
+    # punto_5(grafo)
+    punto_6(grafo)
+    
 
