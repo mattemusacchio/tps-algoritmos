@@ -109,6 +109,25 @@ class Graph:
         """
         return list(self._graph.keys())
     
+    def dfs(self, start: str) -> Dict[str, Tuple[str, int]]:
+        """
+        Depth-first search
+        :param start: the start vertex
+        :return: the distances from the start vertex to all other vertices
+        """
+        distances = {start: (None, 0)}
+        stack = [start]
+
+        while stack:
+            current_vertex = stack.pop()
+
+            for neighbor in self.get_neighbors(current_vertex):
+                if neighbor not in distances:
+                    distances[neighbor] = (current_vertex, distances[current_vertex][1] + 1)
+                    stack.append(neighbor)
+
+        return distances
+    
     def bfs(self, start: str) -> Dict[str, Tuple[str, int]]:
         """
         Breadth-first search
@@ -164,7 +183,7 @@ class Graph:
         
     def diametroEstimado(self,m) -> List[str]:
         """
-        estimar el diametro del grafo
+        estimar el diametro del grafo tomando m veces el camino mas corto de entre 100 caminos distintos entre 2 vertices. De esos m caminos, devolver el mas largo.
         """
         vertices = self.get_vertices()
         n = len(vertices)
@@ -206,7 +225,7 @@ class Graph:
         # Return the shortest path among the found shortest paths
         return min(paths, key=len) if paths else []
     
-    def pageRank(self,m, damping = 0.85, tolerance = 1e-8, max_iter = 100):
+    def pageRank(self, m, damping = 0.85, tolerance = 1e-8, max_iter = 100):
         """
         implementar PageRank y devolver los primeros m vertices con mayor PageRank
         """
@@ -273,7 +292,7 @@ class Graph:
             cycle = self._dfs_buscar_ciclo(node, visitados, path, longitud_ciclo)
             if cycle:
                 bar.close()
-                print(f"Ciclo encontrado. longitud: {longitud_ciclo}")
+                print(f"Ciclo encontrado, longitud: {longitud_ciclo}")
                 return cycle
             bar.update(time.time() - start_time - bar.n)
         
@@ -295,3 +314,86 @@ class Graph:
                 max = mitad - 1
 
         return circunferencia
+    
+    def dfs_polygons(self, origen, n, k, longitud, visitados, contador):
+        if longitud == k:
+            if n == origen:
+                contador[0] += 1
+            return
+        for vecino in self.get_neighbors(n):
+            if (vecino, longitud+1) not in visitados:
+                visitados.add((vecino, longitud+1))
+                self.dfs_polygons(origen, vecino, k, longitud+1, visitados, contador)
+                visitados.remove((vecino, longitud+1))
+
+    def count_directed_polygons(self, k):
+        contador = [0]
+        for vertex in tqdm(self.get_vertices(), desc=f"Buscando poligonos de longitud {k}"):
+            visitados = set()
+            visitados.add((vertex, 0))
+            self.dfs_polygons(vertex, vertex, k, 0, visitados, contador)
+        return contador[0] // k
+    
+    def coeficiente_clustering(self):
+        coefficients = []
+        
+        for node in self.get_vertices():
+            neighbors = self.get_neighbors(node)
+            if len(neighbors) < 2:
+                coefficients.append(0.0)
+                continue
+
+            link_count = 0
+            for i in range(len(neighbors)):
+                for j in range(i + 1, len(neighbors)):
+                    if neighbors[j] in self.get_neighbors(neighbors[i]):
+                        link_count += 1
+                    if neighbors[i] in self.get_neighbors(neighbors[j]):
+                        link_count += 1
+            
+            possible_links = len(neighbors) * (len(neighbors) - 1)
+            coefficients.append(link_count / possible_links)
+
+        return sum(coefficients) / len(coefficients)
+    
+    def bfs_shortest_path(self, start, goal):
+        explored = set()
+        queue = deque([[start]])
+        
+        if start == goal:
+            return [start]
+        
+        while queue:
+            path = queue.popleft()
+            node = path[-1]
+            
+            if node not in explored:
+                neighbors = self.get_neighbors(node)
+                
+                for neighbor in neighbors:
+                    new_path = list(path)
+                    new_path.append(neighbor)
+                    queue.append(new_path)
+                    
+                    if neighbor == goal:
+                        return new_path
+                
+                explored.add(node)
+        
+        return None
+
+    def estimate_betweenness_centrality(self, sample_size):
+        nodes = self.get_vertices()
+        betweenness_estimate = {node: 0 for node in nodes}
+        
+        for _ in tqdm(range(sample_size), desc="Calculando betweenness centrality"):
+            # Selecciona aleatoriamente un par de nodos
+            source, target = random.sample(nodes, 2)
+            shortest_path = self.bfs_shortest_path(source, target)
+            if shortest_path:
+                for node in shortest_path[1:-1]:
+                    betweenness_estimate[node] += 1
+        
+        # Encuentra el nodo con la máxima centralidad de intermediación estimada
+        max_betweenness_node = max(betweenness_estimate, key=betweenness_estimate.get)
+        return max_betweenness_node, betweenness_estimate[max_betweenness_node]

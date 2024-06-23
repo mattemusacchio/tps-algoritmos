@@ -1,12 +1,26 @@
+************************** Punto 1 **************************
+Tamaño de la componente conexa más grande: 855802
+Número de componentes conexas: 2746
+
 ************************** Punto 2 **************************
 Estimación de tiempo para encontrar todos los caminos más cortos: 180.24 horas
+
+como tomaría mucho tiempo encontrar todos los caminos más cortos, se decidió estimar el tiempo que podría tomar, para esto se tomó una muestra mas pequeña de 100 vértices y se calculó el tiempo que tomaría encontrar todos los caminos más cortos entre estos vértices, luego se multiplicó este tiempo por el número total de vértices en el grafo para obtener una estimación del tiempo total.
+
 ************************** Punto 3 **************************
 Cantidad de triángulos en el grafo: 3889771
+
 ************************** Punto 4 **************************
+Diámetro del grafo: 21
+Diámetro del grafo: 24
 Diámetro del grafo: 29
+Diámetro del grafo: 34
+
+este resultado es solo una aproximación, ya que el algoritmo de búsqueda de diámetro no es exacto, pero luego de probar varias veces vemos que el diámetro suele estar entre 20 y 40 aunque es posible que sea mayor.
+
 ************************** Punto 5 **************************
 PageRank de los vértices del grafo:
- 88%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▎                                  | 88/100 [03:38<00:29,  2.48s/it]
+ 88%|███████████████████████████▎  | 88/100 [03:38<00:29,  2.48s/it]
 Vértice 597621: 0.0006443556284897246
 Vértice 41909: 0.0006425463594635652
 Vértice 163075: 0.0006305993370348071
@@ -18,8 +32,36 @@ Vértice 605856: 0.0005008184684261501
 Vértice 32163: 0.0004970632035139191
 Vértice 558791: 0.000494701315653375
 
+en este caso solo mostramos los 10 vértices con mayor PageRank, pero se calculó para todos los vértices del grafo.
+
 ************************** Punto 6 **************************
-Ciclo de longitud 214 encontrado!
-Ciclo de longitud 327 encontrado!
-Ciclo de longitud 330 encontrado!
-Ciclo de longitud 331 encontrado!
+Ciclo encontrado, longitud: 214
+Ciclo encontrado, longitud: 327
+Ciclo encontrado, longitud: 330
+Ciclo encontrado, longitud: 331
+
+En este caso tuvimos que aproximar la circunferencia del grafo, ya que el algoritmo de búsqueda de ciclos no es exacto, pero el mayor ciclo encontrado fue de longitud 331.
+
+************************** Punto Extra 1 **************************
+Cantidad de polígonos de K lados:
+
+Buscando poligonos de longitud 3: 100%|█████████████████████████████████| 875713/875713 [04:31<00:00, 3220.43it/s] 
+Cantidad de polígonos de 3 lados: 3889771
+
+Buscando poligonos de longitud 4: 100%|█████████████████████████████████| 875713/875713 [1:15:00<00:00, 194.58it/s]
+Cantidad de polígonos de 4 lados: 36764631
+
+como vemos el número de polígonos de 3 lados es igual a la cantidad de triángulos en el grafo encontrada en el punto 3, lo cual era de esperarse y sugiere que esta bien implementado el algoritmo de búsqueda de triángulos. El tiempo que se tomó en encontrar los polígonos de 4 lados fue de 1 hora y 15 minutos, por lo que no se intentó buscar polígonos de 5 lados ya que tomaría mucho tiempo.
+
+************************** Punto Extra 2 **************************
+Coeficiente de clustering del grafo: 0.365133010406906
+
+************************** Punto Extra 3 **************************
+Calculando betweenness centrality: 100%|█████████████████████████████████| 100/100 [04:26<00:00,  2.66s/it] 
+Vértice con más betweenness centrality: 163075, con un valor de: 5
+
+Calculando betweenness centrality: 100%|█████████████████████████████████| 100/100 [05:37<00:00,  3.37s/it]
+Vértice con más betweenness centrality: 560622 con un valor de: 7
+
+este resultado es aproximado tomando 100 pares de nodos, por lo que el resultado puede no ser exacto y variar en cada vez que se ejecute el algoritmo.
+
